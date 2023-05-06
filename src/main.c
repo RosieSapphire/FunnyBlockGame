@@ -24,7 +24,7 @@ int main(void)
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	GLFWwindow *window = window_create_centered(WIDTH, HEIGHT,
-			"PS1 Graphics Test");
+			"Funny Block Game (Not Roblox)");
 
 	assert(glfwRawMouseMotionSupported());
 
