@@ -1,5 +1,5 @@
-#ifndef PS1_MESH_H
-#define PS1_MESH_H
+#ifndef FBG_MESH_H
+#define FBG_MESH_H
 
 #include <rmath/vec3f.h>
 #include <rmath/vec2f.h>
@@ -32,7 +32,7 @@ struct mesh *mesh_create_data(struct vertex *verts, GLuint *indis,
 struct mesh *mesh_create_file(const char *path);
 struct mesh *mesh_create_type(enum mesh_type type);
 void mesh_get_model_mat4(struct mesh m, rm_mat4 out);
-void mesh_draw(struct mesh *m, struct camera *c, GLuint texture);
+void mesh_draw(struct mesh *m, GLuint shader, GLuint texture);
 void mesh_destroy(struct mesh *m);
 
 #endif

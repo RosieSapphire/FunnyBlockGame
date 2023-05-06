@@ -1,5 +1,5 @@
-#ifndef PS1_SHADER_H
-#define PS1_SHADER_H
+#ifndef FBG_SHADER_H
+#define FBG_SHADER_H
 
 #include <rmath/mat4.h>
 
