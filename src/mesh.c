@@ -177,19 +177,11 @@ struct mesh *mesh_create_file(const char *path)
 	struct vertex *verts = malloc(num_verts * sizeof(struct vertex));
 	GLuint *indis = malloc(num_indis * sizeof(GLuint));
 
-	int num_mats = scene->mNumMaterials;
-	printf("Scene Mats: %d\n", num_mats);
-	
-	const struct aiMaterial *mat =
-		scene->mMaterials[ai_mesh->mMaterialIndex];
-	struct aiColor4D ai_col;
-
-	aiGetMaterialColor(mat, AI_MATKEY_COLOR_DIFFUSE, &ai_col);
-
 	for(int i = 0; i < num_verts; i++) {
 		const struct aiVector3D ai_pos = ai_mesh->mVertices[i];
 		const struct aiVector3D ai_uv = ai_mesh->mTextureCoords[0][i];
 		const struct aiVector3D ai_norm = ai_mesh->mNormals[i];
+		const struct aiColor4D *ai_col = ai_mesh->mColors[0];
 
 		verts[i].pos[0] = ai_pos.x;
 		verts[i].pos[1] = ai_pos.y;
@@ -199,9 +191,16 @@ struct mesh *mesh_create_file(const char *path)
 		verts[i].norm[0] = ai_norm.x;
 		verts[i].norm[1] = ai_norm.y;
 		verts[i].norm[2] = ai_norm.z;
-		verts[i].col[0] = ai_col.r;
-		verts[i].col[1] = ai_col.g;
-		verts[i].col[2] = ai_col.b;
+
+		if(ai_col) {
+			verts[i].col[0] = ai_col[i].r;
+			verts[i].col[1] = ai_col[i].g;
+			verts[i].col[2] = ai_col[i].b;
+
+			continue;
+		}
+
+		rm_vec3f_copy(RM_VEC3F_ONE, verts[i].col);
 	}
 
 	int indis_counted = 0;
@@ -263,19 +262,19 @@ void mesh_get_model_mat4(struct mesh m, rm_mat4 out)
 	rm_mat4_translate(out, m.pos);
 }
 
-void mesh_draw(struct mesh *m, struct camera *c, GLuint texture)
+void mesh_draw(struct mesh *m, GLuint shader, GLuint texture)
 {
-	rm_vec3f cam_dir, mesh_dir;
+	int is_using_tex_loc = glGetUniformLocation(shader, "u_is_using_tex");
 
-	if(c) {
-		camera_get_forward_vec(*c, cam_dir);
-		rm_vec3f_sub(m->pos, c->eye_pos, mesh_dir);
-		rm_vec3f_normalize(mesh_dir);
+	if(is_using_tex_loc == -1) {
+		printf("Cannot find uniform in shader %d"
+				" 'u_is_using_tex'\n", shader);
 
-		if(rm_vec3f_dot(cam_dir, mesh_dir) > -0.35f)
-			return;
+		return;
 	}
 
+	glUseProgram(shader);
+	glUniform1i(is_using_tex_loc, texture > 0);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glBindVertexArray(m->vao);
