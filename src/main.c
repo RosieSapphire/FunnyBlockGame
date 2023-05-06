@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <math.h>
@@ -9,8 +10,8 @@
 #include "texture.h"
 #include "camera.h"
 
-#define WIDTH 1024
-#define HEIGHT 768
+#define WIDTH 1920
+#define HEIGHT 1080
 #define ASPECT_RATIO ((float)WIDTH / (float)HEIGHT)
 
 GLFWwindow *window_create_centered(int width, int height, const char *title);
@@ -25,7 +26,10 @@ int main(void)
 	GLFWwindow *window = window_create_centered(WIDTH, HEIGHT,
 			"PS1 Graphics Test");
 
+	assert(glfwRawMouseMotionSupported());
+
 	glfwMakeContextCurrent(window);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	gladLoadGL(glfwGetProcAddress);
 	glEnable(GL_DEPTH);
 	glDepthFunc(GL_LESS);
@@ -50,8 +54,8 @@ int main(void)
 
 	rm_mat4_perspective(70.0f, ASPECT_RATIO, 0.1f, 50, projection);
 
-	struct mesh *test_mesh = mesh_create_type(MESH_CUBE);
-	GLuint crate_texture = texture_load("textures/test.png");
+	struct mesh *test_mesh = mesh_create_file("models/sphere.glb");
+	// GLuint crate_texture = texture_load("textures/test.png");
 
 	float time_last = glfwGetTime();
 
@@ -64,21 +68,23 @@ int main(void)
 		time_last = time_now;
 
 		camera_get_view_mat4(cam, view);
+		camera_update_rotation(&cam, window, 0.0006f);
 		camera_update_position(&cam, window, time_delta);
 		test_mesh->rot[1] += time_delta;
 
 		render_layer_bind_and_clear(layer, 0.05f, 0.1f, 0.2f, 1.0f);
 
-		shader_bind(cube_shader);
 		mesh_get_model_mat4(*test_mesh, model);
+
+		glUseProgram(cube_shader);
 		shader_uni_mat4(model_loc, model);
 		shader_uni_mat4(view_loc, view);
 		shader_uni_mat4(projection_loc, projection);
 		shader_uni_vec3f(view_pos_loc, cam.eye_pos);
-		mesh_draw(test_mesh, &cam, crate_texture);
+		// mesh_draw(test_mesh, crate_texture);
+		mesh_draw(test_mesh, cube_shader, 0);
 
-		shader_bind(fbo_shader);
-		render_layer_draw(layer, WIDTH, HEIGHT);
+		render_layer_draw(layer, fbo_shader, WIDTH, HEIGHT);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -86,7 +92,7 @@ int main(void)
 
 	glDeleteProgram(fbo_shader);
 	glDeleteProgram(cube_shader);
-	glDeleteTextures(1, &crate_texture);
+	// glDeleteTextures(1, &crate_texture);
 	mesh_destroy(test_mesh);
 	render_layer_destroy(layer);
 	glfwDestroyWindow(window);
