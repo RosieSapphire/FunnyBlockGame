@@ -1,0 +1,3 @@
+[submodule "deps/rmath"]
+	path = deps/rmath
+	url = https://github.com/RosieSapphire/RubyMath.git
