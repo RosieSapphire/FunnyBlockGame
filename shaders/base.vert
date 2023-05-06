@@ -10,10 +10,9 @@ uniform mat4 u_view;
 uniform mat4 u_model;
 
 out vec2 o_uv;
-out vec3 o_ambient;
-out vec3 o_diffuse;
-out vec3 o_light_col;
 out vec3 o_vert_col;
+out vec3 o_norm;
+out vec3 o_frag_pos;
 
 void main()
 {
@@ -23,14 +22,11 @@ void main()
 	gl_Position = mvp * vertex_pos;
 
 	vec3 frag_pos = vec3(u_model * vertex_pos);
-	vec3 light_col = vec3(1);
-	vec3 light_dir = normalize(vec3(2) - frag_pos);
 	vec3 norm = mat3(transpose(inverse(u_model))) *
 			normalize(a_norm);
 
 	o_uv = a_uv;
-	o_light_col = vec3(1);
-	o_ambient = 0.1 * o_light_col;
-	o_diffuse = max(dot(norm, light_dir), 0.0) * light_col;
+	o_norm = norm;
+	o_frag_pos = frag_pos;
 	o_vert_col = a_col;
 }
