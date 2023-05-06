@@ -38,7 +38,7 @@ struct render_layer *render_layer_create(int width, int height)
 	return layer;
 }
 
-void render_layer_draw(const struct render_layer *l,
+void render_layer_draw(const struct render_layer *l, GLuint shader,
 		int dst_width, int dst_height)
 {
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, l->fbo);
@@ -48,7 +48,16 @@ void render_layer_draw(const struct render_layer *l,
 			dst_width, dst_height, GL_COLOR_BUFFER_BIT,
 			GL_NEAREST);
 	glDisable(GL_DEPTH_TEST);
-	mesh_draw(l->quad_mesh, NULL, l->tex);
+
+	struct mesh *m = l->quad_mesh;
+
+	glUseProgram(shader);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, l->tex);
+	glBindVertexArray(m->vao);
+	glDrawElements(GL_TRIANGLES, m->num_indis, GL_UNSIGNED_INT, m->indis);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindVertexArray(0);
 }
 
 void render_layer_bind_and_clear(const struct render_layer *l,
